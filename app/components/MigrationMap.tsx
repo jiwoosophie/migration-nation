@@ -27,12 +27,15 @@ type Individual = {
 
 type Props = {
   individuals: Individual[];
+  wildfires: any[];
 };
 
-function FitMapToBirds({
+function FitMapToData({
   individuals,
+  wildfires,
 }: {
   individuals: Individual[];
+  wildfires: any[];
 }) {
   const map = useMap();
 
@@ -53,18 +56,21 @@ function FitMapToBirds({
     map.fitBounds(coordinates, {
       padding: [50, 50],
     });
-  }, [individuals, map]);
+  }, [individuals, wildfires, map]);
 
   return null;
 }
 
 export default function MigrationMap({
   individuals,
+  wildfires,
 }: Props) {
   console.log(
     "MigrationMap received:",
     individuals.length,
-    "birds"
+    "birds and",
+    wildfires.length,
+    "fires"
   );
 
   return (
@@ -87,32 +93,22 @@ export default function MigrationMap({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <FitMapToBirds
+        <FitMapToData
           individuals={individuals}
+          wildfires={wildfires}
         />
 
+        {/* 1. Render Bird Tracks & Markers */}
         {individuals.map((bird) => {
-          /*
-           * The complete migration track.
-           */
-          const track: [number, number][] =
-            bird.locations.map((location) => [
-              location.location_lat,
-              location.location_long,
-            ]);
+          const track: [number, number][] = bird.locations.map((location) => [
+            location.location_lat,
+            location.location_long,
+          ]);
 
-          /*
-           * The most recent position.
-           */
-          const lastLocation =
-            bird.locations[
-              bird.locations.length - 1
-            ];
+          const lastLocation = bird.locations[bird.locations.length - 1];
 
           return (
-            <div
-              key={`${bird.study_id}-${bird.individual_local_identifier}`}
-            >
+            <div key={`${bird.study_id}-${bird.individual_local_identifier}`}>
               {track.length >= 2 && (
                 <Polyline
                   positions={track}
@@ -123,19 +119,11 @@ export default function MigrationMap({
                   }}
                 >
                   <Popup>
-                    <strong>
-                      {bird.individual_local_identifier}
-                    </strong>
-
+                    <strong>{bird.individual_local_identifier}</strong>
                     <br />
-
-                    {bird.individual_taxon_canonical_name ??
-                      "Unknown species"}
-
+                    {bird.individual_taxon_canonical_name ?? "Unknown species"}
                     <br />
-
-                    {bird.locations.length} GPS
-                    locations
+                    {bird.locations.length} GPS locations
                   </Popup>
                 </Polyline>
               )}
@@ -155,22 +143,44 @@ export default function MigrationMap({
                   }}
                 >
                   <Popup>
-                    <strong>
-                      {bird.individual_local_identifier}
-                    </strong>
-
+                    <strong>{bird.individual_local_identifier}</strong>
                     <br />
-
-                    {bird.individual_taxon_canonical_name ??
-                      "Unknown species"}
-
+                    {bird.individual_taxon_canonical_name ?? "Unknown species"}
                     <br />
-
                     Latest position
                   </Popup>
                 </CircleMarker>
               )}
             </div>
+          );
+        })}
+
+        {/* 2. Render Live European Wildfires (Red Markers) */}
+        {wildfires.map((fire, index) => {
+          // Extract coordinates safely from GeoJSON format [lng, lat]
+          const coords = fire.geometry?.coordinates;
+          if (!coords || coords.length < 2) return null;
+
+          const [lng, lat] = coords;
+
+          return (
+            <CircleMarker
+              key={`fire-${index}`}
+              center={[lat, lng]}
+              radius={6}
+              pathOptions={{
+                color: "#ff0000",
+                weight: 1,
+                fillColor: "#ff4d4d",
+                fillOpacity: 0.8,
+              }}
+            >
+              <Popup>
+                <strong>Wildfire / Thermal Alert</strong>
+                <br />
+                {fire.properties?.IncidentName || "Active Hotspot"}
+              </Popup>
+            </CircleMarker>
           );
         })}
       </MapContainer>

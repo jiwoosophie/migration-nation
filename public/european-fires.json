@@ -1,0 +1,15 @@
+{
+    "created": "2026-05-13T14:39:41.016160",
+    "description": "MODIS C6.1 (Terra/Aqua) active fire detections for the Europe region over the 48h window. External link to the NASA FIRMS file (continuously updated).",
+    "format": "SHP",
+    "download_url": "https://firms.modaps.eosdis.nasa.gov/data/active_fire/modis-c6.1/shapes/zips/MODIS_C6_1_Europe_48h.zip",
+    "id": "ee6ffe60-93f3-43ba-ae91-0e3b9130d622",
+    "last_modified": "2026-09-18T08:47:04",
+    "metadata_modified": "2026-09-18T09:28:52.372439",
+    "microdata": false,
+    "dataset_id": "3595e7b5-757a-4adb-b19f-870bba54c4d7",
+    "resource_type": "api",
+    "name": "MODIS C6.1 (Terra/Aqua) - 48h (SHP)",
+    "mimetype": null,
+    "size": "20.9K"
+}

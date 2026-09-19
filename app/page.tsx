@@ -18,21 +18,28 @@ type Individual = {
 
 export default function Home() {
   const [individuals, setIndividuals] = useState<Individual[]>([]);
+  const [wildfires, setWildfires] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadBirds() {
+    async function loadData() {
       try {
-        const response = await fetch("/api/birds");
+        // Fetch birds and fires at the same time
+        const [birdRes, fireRes] = await Promise.all([
+          fetch("/api/birds"),
+          fetch("/api/wildfires"),
+        ]);
 
-        if (!response.ok) {
-          throw new Error(`Request failed: ${response.status}`);
+        if (!birdRes.ok) throw new Error(`Bird request failed: ${birdRes.status}`);
+        
+        const birdData = await birdRes.json();
+        setIndividuals(birdData.individuals ?? []);
+
+        if (fireRes.ok) {
+          const fireData = await fireRes.json();
+          setWildfires(fireData.fires ?? fireData.features ?? []);
         }
-
-        const data = await response.json();
-
-        setIndividuals(data.individuals ?? []);
       } catch (err) {
         setError(String(err));
       } finally {
@@ -40,11 +47,11 @@ export default function Home() {
       }
     }
 
-    loadBirds();
+    loadData();
   }, []);
 
   if (loading) {
-    return <main>Loading migration data...</main>;
+    return <main>Loading migration & hazard data...</main>;
   }
 
   if (error) {
@@ -54,12 +61,10 @@ export default function Home() {
   return (
     <main>
       <h1>Migration Nation</h1>
-
       <p>
-        Tracking {individuals.length} individual birds.
+        Tracking {individuals.length} individual birds and {wildfires.length} active European fires.
       </p>
-
-      <MigrationMap individuals={individuals} />
+      <MigrationMap individuals={individuals} wildfires={wildfires} />
     </main>
   );
 }

@@ -9,8 +9,12 @@ import {
   Popup,
   useMap,
 } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
+import L from "leaflet";
 
 import "leaflet/dist/leaflet.css";
+import "react-leaflet-cluster/dist/assets/MarkerCluster.css";
+import "react-leaflet-cluster/dist/assets/MarkerCluster.Default.css";
 
 type Location = {
   timestamp: number;
@@ -30,15 +34,6 @@ type Props = {
   wildfires: any[];
 };
 
-function isValidCoord(lat: unknown, lng: unknown): lat is number {
-  return (
-    typeof lat === "number" &&
-    typeof lng === "number" &&
-    Number.isFinite(lat) &&
-    Number.isFinite(lng)
-  );
-}
-
 function FitMapToData({
   individuals,
   wildfires,
@@ -53,18 +48,10 @@ function FitMapToData({
 
     for (const bird of individuals) {
       for (const location of bird.locations) {
-        if (isValidCoord(location.location_lat, location.location_long)) {
-          coordinates.push([location.location_lat, location.location_long]);
-        }
-      }
-    }
-
-    for (const fire of wildfires) {
-      const coords = fire?.geometry?.coordinates;
-      if (!coords || coords.length < 2) continue;
-      const [lng, lat] = coords;
-      if (isValidCoord(lat, lng)) {
-        coordinates.push([lat, lng]);
+        coordinates.push([
+          location.location_lat,
+          location.location_long,
+        ]);
       }
     }
 
@@ -78,18 +65,35 @@ function FitMapToData({
   return null;
 }
 
+// Custom cluster generator that creates soft red heat/hazard zones with ZERO numbers
+const createFireHeatAreaIcon = function (cluster: any) {
+  const count = cluster.getChildCount();
+  
+  // Scale the regional hazard zone size based on how dense the fire group is
+  let size = 65;
+  if (count > 25) size = 90;
+  if (count > 100) size = 120;
+
+  return L.divIcon({
+    html: `
+      <div style="
+        background: radial-gradient(circle, rgba(255, 45, 0, 0.65) 0%, rgba(255, 0, 0, 0.3) 55%, rgba(255, 0, 0, 0) 100%);
+        width: ${size}px;
+        height: ${size}px;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      "></div>
+    `,
+    className: 'fire-heat-blob-container',
+    iconSize: L.point(size, size, true),
+  });
+};
+
 export default function MigrationMap({
   individuals,
   wildfires,
 }: Props) {
-  console.log(
-    "MigrationMap received:",
-    individuals.length,
-    "birds and",
-    wildfires.length,
-    "fires"
-  );
-
   return (
     <div
       style={{
@@ -98,8 +102,8 @@ export default function MigrationMap({
       }}
     >
       <MapContainer
-        center={[50, 4] as [number, number]}
-        zoom={5}
+        center={[30, 0] as [number, number]}
+        zoom={2}
         style={{
           width: "100%",
           height: "100%",
@@ -117,19 +121,12 @@ export default function MigrationMap({
 
         {/* 1. Render Bird Tracks & Markers */}
         {individuals.map((bird) => {
-          const track: [number, number][] = bird.locations
-            .filter((location) =>
-              isValidCoord(location.location_lat, location.location_long)
-            )
-            .map((location) => [
-              location.location_lat,
-              location.location_long,
-            ]);
+          const track: [number, number][] = bird.locations.map((location) => [
+            location.location_lat,
+            location.location_long,
+          ]);
 
-          const validLocations = bird.locations.filter((location) =>
-            isValidCoord(location.location_lat, location.location_long)
-          );
-          const lastLocation = validLocations[validLocations.length - 1];
+          const lastLocation = bird.locations[bird.locations.length - 1];
 
           return (
             <div key={`${bird.study_id}-${bird.individual_local_identifier}`}>
@@ -179,37 +176,47 @@ export default function MigrationMap({
           );
         })}
 
-        {/* 2. Render Live European Wildfires (Red Markers) */}
-        {wildfires.map((fire, index) => {
-          // Extract coordinates safely from GeoJSON format [lng, lat]
-          const coords = fire.geometry?.coordinates;
-          if (!coords || coords.length < 2) return null;
+        {/* 2. Soft Red Shaded Heat Clusters (Aggregates globally into glowing red regions, splits into individual fires on zoom) */}
+        <MarkerClusterGroup 
+          chunkedLoading 
+          iconCreateFunction={createFireHeatAreaIcon}
+          maxClusterRadius={110}
+          spiderfyOnMaxZoom={true}
+        >
+          {Array.isArray(wildfires) && wildfires.map((fire, index) => {
+            const coords = fire.geometry?.coordinates;
+            if (!coords || coords.length < 2) return null;
 
-          const [lng, lat] = coords;
+            const [lng, lat] = coords;
+            const incidentName = fire.properties?.IncidentName || "Active Hotspot";
 
-          // Guard against null/undefined/NaN values sneaking through
-          if (!isValidCoord(lat, lng)) return null;
-
-          return (
-            <CircleMarker
-              key={`fire-${index}`}
-              center={[lat, lng]}
-              radius={6}
-              pathOptions={{
-                color: "#ff0000",
-                weight: 1,
-                fillColor: "#ff4d4d",
-                fillOpacity: 0.8,
-              }}
-            >
-              <Popup>
-                <strong>Wildfire / Thermal Alert</strong>
-                <br />
-                {fire.properties?.IncidentName || "Active Hotspot"}
-              </Popup>
-            </CircleMarker>
-          );
-        })}
+            return (
+              <CircleMarker
+                key={`fire-${index}`}
+                center={[lat, lng]}
+                radius={5}
+                pathOptions={{
+                  color: "#990000",
+                  weight: 1,
+                  fillColor: "#ff3333",
+                  fillOpacity: 0.85,
+                }}
+              >
+                <Popup>
+                  <div style={{ fontFamily: "sans-serif" }}>
+                    <strong style={{ color: "#cc0000" }}>🔥 Satellite Thermal Anomaly</strong>
+                    <br />
+                    <span>{incidentName}</span>
+                    <br />
+                    <span style={{ fontSize: "0.85rem", color: "#555" }}>
+                      Coordinates: {lat.toFixed(2)}, {lng.toFixed(2)}
+                    </span>
+                  </div>
+                </Popup>
+              </CircleMarker>
+            );
+          })}
+        </MarkerClusterGroup>
       </MapContainer>
     </div>
   );

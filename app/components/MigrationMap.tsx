@@ -349,13 +349,20 @@ export default function MigrationMap({
           );
         })}
 
-        {/* 2. Render Live Wildfires (Red Markers) */}
-        {wildfires.map((fire, index) => {
-          // Extract coordinates safely from GeoJSON format [lng, lat]
-          const coords = fire.geometry?.coordinates;
-          if (!coords || coords.length < 2) return null;
+        {/* 2. Render Live Wildfires (Red Markers), clustered */}
+        <MarkerClusterGroup>
+          {wildfires.map((fire, index) => {
+            // Extract coordinates safely from GeoJSON format [lng, lat]
+            const coords = fire.geometry?.coordinates;
+            if (!coords || coords.length < 2) return null;
 
             const [lng, lat] = coords;
+
+            // Guard against null/undefined/NaN values sneaking through —
+            // this check was present before but got dropped in a merge;
+            // without it, malformed fire data crashes the whole map.
+            if (!isValidCoord(lat, lng)) return null;
+
             const incidentName = fire.properties?.IncidentName || "Active Hotspot";
 
             return (

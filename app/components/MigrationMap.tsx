@@ -11,8 +11,12 @@ import {
   useMap,
   useMapEvents,
 } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
+import L from "leaflet";
 
 import "leaflet/dist/leaflet.css";
+import "react-leaflet-cluster/dist/assets/MarkerCluster.css";
+import "react-leaflet-cluster/dist/assets/MarkerCluster.Default.css";
 
 type Location = {
   timestamp: number;
@@ -351,31 +355,36 @@ export default function MigrationMap({
           const coords = fire.geometry?.coordinates;
           if (!coords || coords.length < 2) return null;
 
-          const [lng, lat] = coords;
+            const [lng, lat] = coords;
+            const incidentName = fire.properties?.IncidentName || "Active Hotspot";
 
-          // Guard against null/undefined/NaN values sneaking through
-          if (!isValidCoord(lat, lng)) return null;
-
-          return (
-            <CircleMarker
-              key={`fire-${index}`}
-              center={[lat, lng]}
-              radius={6}
-              pathOptions={{
-                color: "#ff0000",
-                weight: 1,
-                fillColor: "#ff4d4d",
-                fillOpacity: 0.8,
-              }}
-            >
-              <Popup>
-                <strong>Wildfire / Thermal Alert</strong>
-                <br />
-                {fire.properties?.IncidentName || "Active Hotspot"}
-              </Popup>
-            </CircleMarker>
-          );
-        })}
+            return (
+              <CircleMarker
+                key={`fire-${index}`}
+                center={[lat, lng]}
+                radius={5}
+                pathOptions={{
+                  color: "#990000",
+                  weight: 1,
+                  fillColor: "#ff3333",
+                  fillOpacity: 0.85,
+                }}
+              >
+                <Popup>
+                  <div style={{ fontFamily: "sans-serif" }}>
+                    <strong style={{ color: "#cc0000" }}>🔥 Satellite Thermal Anomaly</strong>
+                    <br />
+                    <span>{incidentName}</span>
+                    <br />
+                    <span style={{ fontSize: "0.85rem", color: "#555" }}>
+                      Coordinates: {lat.toFixed(2)}, {lng.toFixed(2)}
+                    </span>
+                  </div>
+                </Popup>
+              </CircleMarker>
+            );
+          })}
+        </MarkerClusterGroup>
       </MapContainer>
     </div>
   );

@@ -164,7 +164,7 @@ export default function Home() {
             </div>
             <div className="mt-8 pt-4 border-t border-[#9EB683]/50 flex items-baseline justify-between">
               <span className="text-4xl sm:text-5xl font-extrabold text-[#E63989]">58%</span>
-              <span className="text-xs font-bold text-[#111] bg-white px-2.5 py-1 rounded-md">Hotspots at Low-Severity Risk</span>
+              <span className="text-xs font-bold text-[#111] bg-white px-2.5 py-1 rounded-md">Hotspots at Low-Severity</span>
             </div>
           </div>
 

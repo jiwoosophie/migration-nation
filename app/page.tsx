@@ -127,7 +127,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-[#111] mb-2 font-editorial">Springs Are Coming Earlier</h3>
               <p className="text-[#2D4029] text-sm leading-relaxed">
-                Weather radar data shows North American birds arriving a few days earlier each spring as the climate warms.{" "}
+                Weather radar data shows North American birds arriving earlier each spring as the climate warms.{" "}
                 <a
                   href="https://www.scientificamerican.com/article/millions-of-birds-are-migrating-earlier-because-of-warming/"
                   target="_blank"
@@ -139,7 +139,7 @@ export default function Home() {
               </p>
             </div>
             <div className="mt-8 pt-4 border-t border-[#8FA874]/50 flex items-baseline justify-between">
-              <span className="text-4xl sm:text-5xl font-extrabold text-[#111]">~2 Days</span>
+              <span className="text-4xl sm:text-5xl font-extrabold text-[#111]">2 Days</span>
               <span className="text-xs font-bold text-[#E63989] bg-white px-2.5 py-1 rounded-md">Earlier Per Decade</span>
             </div>
           </div>
@@ -151,7 +151,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-[#111] mb-2 font-editorial">Fire Risk Meets Bird Diversity</h3>
               <p className="text-[#2D4029] text-sm leading-relaxed">
-                Nearly a third of bird diversity hotspots face high-severity fire risk, but up to 58% sit in low-severity zones that could serve as refuges for forest-dependent species.{" "}
+                Up to 58% of bird diversity hotspots occur in areas predicted to experience low-severity fires.{" "}
                 <a
                   href="https://www.birds.cornell.edu/home/forecasting-impacts-of-fire-on-birds/"
                   target="_blank"
@@ -163,8 +163,8 @@ export default function Home() {
               </p>
             </div>
             <div className="mt-8 pt-4 border-t border-[#9EB683]/50 flex items-baseline justify-between">
-              <span className="text-4xl sm:text-5xl font-extrabold text-[#E63989]">24–30%</span>
-              <span className="text-xs font-bold text-[#111] bg-white px-2.5 py-1 rounded-md">Hotspots at High-Severity Risk</span>
+              <span className="text-4xl sm:text-5xl font-extrabold text-[#E63989]">58%</span>
+              <span className="text-xs font-bold text-[#111] bg-white px-2.5 py-1 rounded-md">Hotspots at Low-Severity Risk</span>
             </div>
           </div>
 
@@ -275,7 +275,7 @@ export default function Home() {
         <footer className="text-center py-8 text-[#2D4029] text-sm font-bold flex flex-col sm:flex-row items-center justify-between px-4">
           <p>&copy; {new Date().getFullYear()} The Phoenix Project. All rights reserved.</p>
           <div className="flex gap-6 mt-4 sm:mt-0">
-            <span className="hover:text-[#E63989] cursor-pointer">Birds tracked over 5 days, fires tracked over 2 days</span>
+            <span className="hover:text-[#E63989] cursor-pointer">Birds tracked over 7 days, fires tracked over 2 days</span>
           </div>
         </footer>
 

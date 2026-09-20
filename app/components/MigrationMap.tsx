@@ -249,7 +249,7 @@ export default function MigrationMap({
             boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
           }}
         >
-          Zoom to all
+          Zoom to World
         </button>
       )}
 

@@ -1,11 +1,4 @@
-project description here. 
-
-You must disclose the tools you use. The use of AI tools (ChatGPT, Claude, Copilot, Gemini) must be credited
-Movebank
-NICF
-OpenFreeMap for tiles
-
-Created during Steelhacks XII
+# Created during Steelhacks XII
 
 ## Inspiration
 We wanted to explore how wildfires can affect birds during their migration. By putting fire activity and bird migration routes on the same map, we can make their potential overlap easier to see.
@@ -21,6 +14,8 @@ We're proud that we created an interactive way to visualize the potential impact
 We learned how to work with geospatial data and build interactive visualizations. We also saw how maps can make complex environmental relationships much easier to understand.
 ## What's next for Migration Nation
 We want to add more bird species, historical fire data, and seasonal migration patterns. In the future, we'd also like to add time-based visualization to show how fires and migration change over time.
+## Tools
+This project incorporates the Movebank API and NASA FIRMS API as the main data sources. OpenFreeMap was incorporated for world map tiles. AI tools (ChatGPT, Claude, Gemini) were used during the process. 
 
 To get started with the dev server use:
 

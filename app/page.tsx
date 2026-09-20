@@ -82,7 +82,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 z-10">
             <div className="bg-white/90 backdrop-blur-sm px-5 py-2 rounded-full border border-[#8FA874] shadow-sm">
               <span className="text-xs uppercase tracking-widest font-extrabold text-[#2D4029]">
-                www.phoenixproject.org
+                STEELHACKS XIII
               </span>
             </div>
             <div className="flex items-center gap-3">
@@ -127,7 +127,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-[#111] mb-2 font-editorial">Springs Are Coming Earlier</h3>
               <p className="text-[#2D4029] text-sm leading-relaxed">
-                Weather radar analysis of North American spring migrations shows birds arriving progressively earlier as temperatures rise, a trend researchers link directly to warming climate patterns.{" "}
+                Weather radar data shows North American birds arriving a few days earlier each spring as the climate warms.{" "}
                 <a
                   href="https://www.scientificamerican.com/article/millions-of-birds-are-migrating-earlier-because-of-warming/"
                   target="_blank"
@@ -151,7 +151,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-[#111] mb-2 font-editorial">Fire Risk Meets Bird Diversity</h3>
               <p className="text-[#2D4029] text-sm leading-relaxed">
-                Cornell Lab of Ornithology research found that a meaningful share of bird diversity hotspots sit in zones projected to burn at high severity — though the same study points to good news too: as much as 58% of those hotspots fall in areas expected to see only low-severity fire, offering potential refuges for forest-dependent species.{" "}
+                Nearly a third of bird diversity hotspots face high-severity fire risk, but up to 58% sit in low-severity zones that could serve as refuges for forest-dependent species.{" "}
                 <a
                   href="https://www.birds.cornell.edu/home/forecasting-impacts-of-fire-on-birds/"
                   target="_blank"
@@ -275,9 +275,7 @@ export default function Home() {
         <footer className="text-center py-8 text-[#2D4029] text-sm font-bold flex flex-col sm:flex-row items-center justify-between px-4">
           <p>&copy; {new Date().getFullYear()} The Phoenix Project. All rights reserved.</p>
           <div className="flex gap-6 mt-4 sm:mt-0">
-            <span className="hover:text-[#E63989] cursor-pointer">Privacy Policy</span>
-            <span className="hover:text-[#E63989] cursor-pointer">Data Sources</span>
-            <span className="hover:text-[#E63989] cursor-pointer">Contact</span>
+            <span className="hover:text-[#E63989] cursor-pointer">Birds tracked over 5 days, fires tracked over 2 days</span>
           </div>
         </footer>
 

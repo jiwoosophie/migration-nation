@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 
-// Dynamically import the map from the local components folder with SSR disabled
 const MigrationMap = dynamic(() => import('./components/MigrationMap'), {
   ssr: false,
   loading: () => (
@@ -29,20 +28,27 @@ type Individual = {
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'all' | 'birds' | 'fires'>('all');
   const [individuals, setIndividuals] = useState<Individual[]>([]);
+  const [wildfires, setWildfires] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadBirds() {
+    async function loadData() {
       try {
-        const response = await fetch("/api/birds");
+        const [birdRes, fireRes] = await Promise.all([
+          fetch("/api/birds"),
+          fetch("/api/wildfires"),
+        ]);
 
-        if (!response.ok) {
-          throw new Error(`Request failed: ${response.status}`);
+        if (!birdRes.ok) throw new Error(`Bird request failed: ${birdRes.status}`);
+
+        const birdData = await birdRes.json();
+        setIndividuals(birdData.individuals ?? []);
+
+        if (fireRes.ok) {
+          const fireData = await fireRes.json();
+          setWildfires(fireData.fires ?? fireData.features ?? []);
         }
-
-        const data = await response.json();
-        setIndividuals(data.individuals ?? []);
       } catch (err) {
         setError(String(err));
       } finally {
@@ -50,24 +56,20 @@ export default function Home() {
       }
     }
 
-    loadBirds();
+    loadData();
   }, []);
+
+  // Derive what actually gets shown on the map based on the tab selection
+  const visibleIndividuals = activeTab === 'fires' ? [] : individuals;
+  const visibleWildfires = activeTab === 'birds' ? [] : wildfires;
 
   return (
     <main className="min-h-screen bg-[#F5F8F2] text-[#1A1A1A] font-sans antialiased selection:bg-[#E63989] selection:text-white p-4 sm:p-8 lg:p-12">
-      {/* Import Google Fonts */}
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Dancing+Script:wght@700&display=swap');
-        
-        .font-editorial {
-          font-family: 'Playfair Display', serif;
-        }
-        .font-script {
-          font-family: 'Dancing Script', cursive;
-        }
-        body {
-          font-family: 'Plus Jakarta Sans', sans-serif;
-        }
+        .font-editorial { font-family: 'Playfair Display', serif; }
+        .font-script { font-family: 'Dancing Script', cursive; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
       `}</style>
 
       <div className="max-w-7xl mx-auto space-y-8">
@@ -106,12 +108,12 @@ export default function Home() {
             <div className="text-sm font-bold text-[#2B3E27] uppercase tracking-wider">
               Establishing Long-Term Ecological Direction
             </div>
-            <a 
-              href="#map-section" 
+            <a
+              href="#map-section"
               className="bg-[#1A1A1A] text-white hover:bg-[#E63989] transition-colors px-8 py-3.5 rounded-xl font-bold shadow-lg flex items-center gap-2 group"
             >
               Explore Live Map
-              <span className="group-hover:translate-x-1 transition-transform">→</span>
+              <span className="group-hover:translate-x-1 transition-transform">{'\u2192'}</span>
             </a>
           </div>
         </section>
@@ -180,11 +182,11 @@ export default function Home() {
                 Birds & Wildfires Map
               </h2>
               <p className="text-sm text-[#2D4029] mt-1 font-medium">
-                {loading 
-                  ? 'Loading live telemetry data from API...' 
-                  : error 
-                  ? `Error loading data: ${error}` 
-                  : `Successfully tracking ${individuals.length} individual birds in real-time.`}
+                {loading
+                  ? 'Loading live telemetry data from API...'
+                  : error
+                  ? `Error loading data: ${error}`
+                  : `Tracking ${individuals.length} birds and ${wildfires.length} active fires.`}
               </p>
             </div>
 
@@ -203,7 +205,7 @@ export default function Home() {
                   activeTab === 'birds' ? 'bg-[#E63989] text-white shadow-md' : 'text-[#2D4029] hover:bg-black/5'
                 }`}
               >
-                🐦 Birds Only
+                Birds Only
               </button>
               <button
                 onClick={() => setActiveTab('fires')}
@@ -211,7 +213,7 @@ export default function Home() {
                   activeTab === 'fires' ? 'bg-[#E63989] text-white shadow-md' : 'text-[#2D4029] hover:bg-black/5'
                 }`}
               >
-                🔥 Wildfires Only
+                Wildfires Only
               </button>
             </div>
           </div>
@@ -226,14 +228,14 @@ export default function Home() {
                 Error: {error}
               </div>
             ) : (
-              <MigrationMap individuals={individuals} />
+              <MigrationMap individuals={visibleIndividuals} wildfires={visibleWildfires} />
             )}
           </div>
         </section>
 
         {/* ================= FOOTER ================= */}
         <footer className="text-center py-8 text-[#2D4029] text-sm font-bold flex flex-col sm:flex-row items-center justify-between px-4">
-          <p>© {new Date().getFullYear()} The Phoenix Project. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} The Phoenix Project. All rights reserved.</p>
           <div className="flex gap-6 mt-4 sm:mt-0">
             <span className="hover:text-[#E63989] cursor-pointer">Privacy Policy</span>
             <span className="hover:text-[#E63989] cursor-pointer">Data Sources</span>

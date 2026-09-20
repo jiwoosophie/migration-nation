@@ -5,6 +5,7 @@ import type { Map as LeafletMap } from "leaflet";
 import {
   MapContainer,
   TileLayer,
+  Polyline,
   CircleMarker,
   Popup,
   useMap,
@@ -12,7 +13,6 @@ import {
 } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
-import "leaflet-ant-path";
 
 import "leaflet/dist/leaflet.css";
 import "react-leaflet-cluster/dist/assets/MarkerCluster.css";
@@ -36,8 +36,11 @@ type Props = {
   wildfires: any[];
 };
 
-const BIRD_DEFAULT_COLOR = "#0ea5e9"; // Crisp sky blue
-const BIRD_SELECTED_COLOR = "#E63989"; // Brand pink for active selection
+// Default bird color: warm amber instead of the old blue, which blended
+// into the map's water/land tiles. Selected bird color matches the site's
+// pink brand accent so the highlighted path reads as "active/selected."
+const BIRD_DEFAULT_COLOR = "#FFB800";
+const BIRD_SELECTED_COLOR = "#E63989";
 
 function isValidCoord(lat: unknown, lng: unknown): lat is number {
   return (
@@ -86,60 +89,11 @@ function getAllCoordinates(
   return coordinates;
 }
 
-// Robust manager component to draw and update animated trails for ALL birds cleanly
-function BirdAntPathsLayer({
-  individuals,
-  selectedKey,
-  onSelectBird,
-}: {
-  individuals: Individual[];
-  selectedKey: string | null;
-  onSelectBird: (key: string) => void;
-}) {
-  const map = useMap();
-  const layerGroupRef = useRef<L.LayerGroup | null>(null);
-
-  useEffect(() => {
-    if (!layerGroupRef.current) {
-      layerGroupRef.current = L.layerGroup().addTo(map);
-    }
-    const layerGroup = layerGroupRef.current;
-    layerGroup.clearLayers();
-
-    individuals.forEach((bird) => {
-      const birdKey = getBirdKey(bird);
-      const isSelected = birdKey === selectedKey;
-
-      const track: [number, number][] = bird.locations
-        .filter((loc) => isValidCoord(loc.location_lat, loc.location_long))
-        .map((loc) => [loc.location_lat, loc.location_long]);
-
-      if (track.length >= 2) {
-        // @ts-ignore
-        const antPath = L.polyline.antPath(track, {
-          delay: 700,
-          dashArray: [14, 28],
-          weight: isSelected ? 7 : 5,
-          color: isSelected ? BIRD_SELECTED_COLOR : BIRD_DEFAULT_COLOR,
-          pulseColor: "#ffffff",
-          paused: false,
-          reverse: false,
-          hardwareAccelerated: true,
-        });
-
-        antPath.on("click", () => onSelectBird(birdKey));
-        layerGroup.addLayer(antPath);
-      }
-    });
-
-    return () => {
-      layerGroup.clearLayers();
-    };
-  }, [individuals, selectedKey, map, onSelectBird]);
-
-  return null;
-}
-
+// Leaflet measures its container's size once on init. If that happens
+// before the surrounding layout (loading states, dynamic import, flex
+// containers) has settled into its final size, the map renders broken —
+// often as a repeating, badly-zoomed world. Forcing a size recheck shortly
+// after mount fixes this without needing to restructure the loading flow.
 function InvalidateMapSize() {
   const map = useMap();
 
@@ -174,7 +128,14 @@ function FitMapToData({
   return null;
 }
 
-function ZoomToSelectedBird({ track }: { track: [number, number][] }) {
+// Zooms/fits the map to a specific bird's full track whenever the
+// selected bird changes. Runs as its own child component so it can use
+// useMap(), same pattern as FitMapToData above.
+function ZoomToSelectedBird({
+  track,
+}: {
+  track: [number, number][];
+}) {
   const map = useMap();
 
   useEffect(() => {
@@ -191,6 +152,8 @@ function ZoomToSelectedBird({ track }: { track: [number, number][] }) {
   return null;
 }
 
+// Clicking anywhere on the map that isn't a marker/track clears the
+// current selection and zooms back out to show everything again.
 function DeselectOnMapClick({
   individuals,
   wildfires,
@@ -214,9 +177,30 @@ function DeselectOnMapClick({
   return null;
 }
 
-export default function MigrationMap({ individuals, wildfires }: Props) {
+export default function MigrationMap({
+  individuals,
+  wildfires,
+}: Props) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
+
+  // Leaflet doesn't automatically release its hold on the container DOM
+  // node when React unmounts this component (e.g. navigating away and
+  // back). Without this explicit cleanup, remounting throws "Map
+  // container is being reused by another instance."
+  useEffect(() => {
+    return () => {
+      mapRef.current?.remove();
+    };
+  }, []);
+
+  console.log(
+    "MigrationMap received:",
+    individuals.length,
+    "birds and",
+    wildfires.length,
+    "fires"
+  );
 
   const selectedBird = individuals.find(
     (bird) => getBirdKey(bird) === selectedKey
@@ -246,22 +230,6 @@ export default function MigrationMap({ individuals, wildfires }: Props) {
         position: "relative",
       }}
     >
-      {/* CSS overrides for seamless heat-map fire clusters (No numbers, large glowing red clouds when zoomed out) */}
-      <style jsx global>{`
-        .marker-cluster-small,
-        .marker-cluster-medium,
-        .marker-cluster-large {
-          background: radial-gradient(circle, rgba(239, 68, 68, 0.85) 0%, rgba(220, 38, 38, 0.4) 60%, rgba(185, 28, 28, 0) 100%) !important;
-          border-radius: 50%;
-          box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
-        }
-        .marker-cluster-small div,
-        .marker-cluster-medium div,
-        .marker-cluster-large div {
-          display: none !important;
-        }
-      `}</style>
-
       {selectedKey && (
         <button
           onClick={handleZoomToAll}
@@ -303,7 +271,10 @@ export default function MigrationMap({ individuals, wildfires }: Props) {
 
         <InvalidateMapSize />
 
-        <FitMapToData individuals={individuals} wildfires={wildfires} />
+        <FitMapToData
+          individuals={individuals}
+          wildfires={wildfires}
+        />
 
         {selectedKey && <ZoomToSelectedBird track={selectedTrack} />}
 
@@ -313,70 +284,62 @@ export default function MigrationMap({ individuals, wildfires }: Props) {
           onDeselect={() => setSelectedKey(null)}
         />
 
-        {/* Centralized manager to ensure ALL active birds have animated movement trails */}
-        <BirdAntPathsLayer
-          individuals={individuals}
-          selectedKey={selectedKey}
-          onSelectBird={(key) => setSelectedKey(key)}
-        />
-
-        {/* Render Bird Origin and Current Location Markers */}
+        {/* 1. Render Bird Tracks & Markers */}
         {individuals.map((bird) => {
           const birdKey = getBirdKey(bird);
           const isSelected = birdKey === selectedKey;
 
+          const track: [number, number][] = bird.locations
+            .filter((location) =>
+              isValidCoord(location.location_lat, location.location_long)
+            )
+            .map((location) => [
+              location.location_lat,
+              location.location_long,
+            ]);
+
           const validLocations = bird.locations.filter((location) =>
             isValidCoord(location.location_lat, location.location_long)
           );
-          const startLocation = validLocations[0];
           const lastLocation = validLocations[validLocations.length - 1];
 
           const handleSelect = () => setSelectedKey(birdKey);
 
           return (
             <div key={birdKey}>
-              {/* Origin Marker */}
-              {startLocation && (
-                <CircleMarker
-                  center={[
-                    startLocation.location_lat,
-                    startLocation.location_long,
-                  ]}
-                  radius={4}
+              {track.length >= 2 && (
+                <Polyline
+                  positions={track}
                   pathOptions={{
-                    color: "#0369a1",
-                    weight: 1,
-                    fillColor: "#bae6fd",
-                    fillOpacity: 0.9,
+                    color: isSelected ? BIRD_SELECTED_COLOR : BIRD_DEFAULT_COLOR,
+                    weight: isSelected ? 6 : 4,
+                    opacity: isSelected ? 1 : 0.8,
                   }}
                   eventHandlers={{
                     click: handleSelect,
                   }}
                 >
                   <Popup>
-                    <strong>{bird.individual_local_identifier} (Origin)</strong>
+                    <strong>
+                      {bird.individual_taxon_canonical_name ?? "Unknown species"}
+                    </strong>
                     <br />
-                    {bird.individual_taxon_canonical_name ?? "Gull Specimen"}
-                    <br />
-                    Started: {formatTimestamp(startLocation.timestamp)}
+                    Last updated: {formatTimestamp(track.length ? bird.locations[bird.locations.length - 1]?.timestamp : undefined)}
                   </Popup>
-                </CircleMarker>
+                </Polyline>
               )}
 
-              {/* Current Position Marker */}
               {lastLocation && (
                 <CircleMarker
                   center={[
                     lastLocation.location_lat,
                     lastLocation.location_long,
                   ]}
-                  radius={isSelected ? 9 : 7}
+                  radius={isSelected ? 10 : 8}
                   pathOptions={{
                     color: "#000000",
                     weight: 2,
-                    fillColor: isSelected
-                      ? BIRD_SELECTED_COLOR
-                      : BIRD_DEFAULT_COLOR,
+                    fillColor: isSelected ? BIRD_SELECTED_COLOR : BIRD_DEFAULT_COLOR,
                     fillOpacity: 1,
                   }}
                   eventHandlers={{
@@ -384,9 +347,9 @@ export default function MigrationMap({ individuals, wildfires }: Props) {
                   }}
                 >
                   <Popup>
-                    <strong>{bird.individual_local_identifier} (Current)</strong>
-                    <br />
-                    {bird.individual_taxon_canonical_name ?? "Gull Specimen"}
+                    <strong>
+                      {bird.individual_taxon_canonical_name ?? "Unknown species"}
+                    </strong>
                     <br />
                     Last updated: {formatTimestamp(lastLocation.timestamp)}
                   </Popup>
@@ -396,39 +359,37 @@ export default function MigrationMap({ individuals, wildfires }: Props) {
           );
         })}
 
-        {/* Render Wildfires as Heat-Map Glowing Thermal Blobs */}
-        <MarkerClusterGroup
-          chunkedLoading
-          maxClusterRadius={90}
-          spiderfyOnMaxZoom={true}
-        >
+        {/* 2. Render Live Wildfires (Red Markers), clustered */}
+        <MarkerClusterGroup>
           {wildfires.map((fire, index) => {
+            // Extract coordinates safely from GeoJSON format [lng, lat]
             const coords = fire.geometry?.coordinates;
             if (!coords || coords.length < 2) return null;
 
             const [lng, lat] = coords;
+
+            // Guard against null/undefined/NaN values sneaking through —
+            // this check was present before but got dropped in a merge;
+            // without it, malformed fire data crashes the whole map.
             if (!isValidCoord(lat, lng)) return null;
 
-            const incidentName =
-              fire.properties?.IncidentName || "Thermal Hotspot";
+            const incidentName = fire.properties?.IncidentName || "Active Hotspot";
 
             return (
               <CircleMarker
                 key={`fire-${index}`}
                 center={[lat, lng]}
-                radius={6}
+                radius={5}
                 pathOptions={{
-                  color: "#7f1d1d",
+                  color: "#990000",
                   weight: 1,
-                  fillColor: "#ef4444",
-                  fillOpacity: 0.9,
+                  fillColor: "#ff3333",
+                  fillOpacity: 0.85,
                 }}
               >
                 <Popup>
                   <div style={{ fontFamily: "sans-serif" }}>
-                    <strong style={{ color: "#dc2626" }}>
-                      🔥 Satellite Thermal Anomaly
-                    </strong>
+                    <strong style={{ color: "#cc0000" }}>🔥 Satellite Thermal Anomaly</strong>
                     <br />
                     <span>{incidentName}</span>
                     <br />

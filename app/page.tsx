@@ -82,7 +82,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 z-10">
             <div className="bg-white/90 backdrop-blur-sm px-5 py-2 rounded-full border border-[#8FA874] shadow-sm">
               <span className="text-xs uppercase tracking-widest font-extrabold text-[#2D4029]">
-                www.phoenixproject.org
+                STEELHACKS XIII
               </span>
             </div>
             <div className="flex items-center gap-3">
@@ -125,14 +125,22 @@ export default function Home() {
               <div className="bg-[#E63989] text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full inline-block mb-4 shadow-sm">
                 Migration Shift
               </div>
-              <h3 className="text-xl font-bold text-[#111] mb-2 font-editorial">Early Arrival Timelines</h3>
+              <h3 className="text-xl font-bold text-[#111] mb-2 font-editorial">Springs Are Coming Earlier</h3>
               <p className="text-[#2D4029] text-sm leading-relaxed">
-                Spring migrants are arriving an average of 14 days earlier than historical baselines due to unseasonal warming trends.
+                Weather radar data shows North American birds arriving a few days earlier each spring as the climate warms.{" "}
+                <a
+                  href="https://www.scientificamerican.com/article/millions-of-birds-are-migrating-earlier-because-of-warming/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-[#E63989]"
+                >
+                  Source: Scientific American
+                </a>
               </p>
             </div>
             <div className="mt-8 pt-4 border-t border-[#8FA874]/50 flex items-baseline justify-between">
-              <span className="text-4xl sm:text-5xl font-extrabold text-[#111]">14 Days</span>
-              <span className="text-xs font-bold text-[#E63989] bg-white px-2.5 py-1 rounded-md">Average Shift</span>
+              <span className="text-4xl sm:text-5xl font-extrabold text-[#111]">~2 Days</span>
+              <span className="text-xs font-bold text-[#E63989] bg-white px-2.5 py-1 rounded-md">Earlier Per Decade</span>
             </div>
           </div>
 
@@ -141,14 +149,22 @@ export default function Home() {
               <div className="bg-[#1A1A1A] text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full inline-block mb-4 shadow-sm">
                 Habitat Disruption
               </div>
-              <h3 className="text-xl font-bold text-[#111] mb-2 font-editorial">Wildfire Displacement</h3>
+              <h3 className="text-xl font-bold text-[#111] mb-2 font-editorial">Fire Risk Meets Bird Diversity</h3>
               <p className="text-[#2D4029] text-sm leading-relaxed">
-                Over 68% of tracked primary nesting routes intersect with active or recent high-intensity wildfire perimeters.
+                Nearly a third of bird diversity hotspots face high-severity fire risk, but up to 58% sit in low-severity zones that could serve as refuges for forest-dependent species.{" "}
+                <a
+                  href="https://www.birds.cornell.edu/home/forecasting-impacts-of-fire-on-birds/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-[#E63989]"
+                >
+                  Source: Cornell Lab of Ornithology
+                </a>
               </p>
             </div>
             <div className="mt-8 pt-4 border-t border-[#9EB683]/50 flex items-baseline justify-between">
-              <span className="text-4xl sm:text-5xl font-extrabold text-[#E63989]">68%</span>
-              <span className="text-xs font-bold text-[#111] bg-white px-2.5 py-1 rounded-md">Routes Impacted</span>
+              <span className="text-4xl sm:text-5xl font-extrabold text-[#E63989]">24–30%</span>
+              <span className="text-xs font-bold text-[#111] bg-white px-2.5 py-1 rounded-md">Hotspots at High-Severity Risk</span>
             </div>
           </div>
 
@@ -231,15 +247,35 @@ export default function Home() {
               <MigrationMap individuals={visibleIndividuals} wildfires={visibleWildfires} />
             )}
           </div>
+
+          <p className="text-xs text-[#2D4029]/70 mt-4 text-center font-medium">
+            Live bird tracking data provided by{" "}
+            <a
+              href="https://www.movebank.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-[#E63989]"
+            >
+              Movebank
+            </a>
+            . Wildfire detection data provided by{" "}
+            <a
+              href="https://firms.modaps.eosdis.nasa.gov/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-[#E63989]"
+            >
+              NASA FIRMS
+            </a>
+            .
+          </p>
         </section>
 
         {/* ================= FOOTER ================= */}
         <footer className="text-center py-8 text-[#2D4029] text-sm font-bold flex flex-col sm:flex-row items-center justify-between px-4">
           <p>&copy; {new Date().getFullYear()} The Phoenix Project. All rights reserved.</p>
           <div className="flex gap-6 mt-4 sm:mt-0">
-            <span className="hover:text-[#E63989] cursor-pointer">Privacy Policy</span>
-            <span className="hover:text-[#E63989] cursor-pointer">Data Sources</span>
-            <span className="hover:text-[#E63989] cursor-pointer">Contact</span>
+            <span className="hover:text-[#E63989] cursor-pointer">Birds tracked over 5 days, fires tracked over 2 days</span>
           </div>
         </footer>
 
